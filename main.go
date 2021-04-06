@@ -9,10 +9,42 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 const namespace = "default"
+
+func main() {
+	
+	//From kube config file use
+	//clientset, err := getClient("./kube_config.yml")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	
+	//From load the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	getNodes(clientset)
+	getPods(clientset)
+
+	createPod(clientset, "pod-created-by-go")
+
+	createJob(clientset, "job-created-by-go")
+
+	deletePod(clientset, "pod-created-by-go")
+
+}
 
 func getClient(kubeconfig string) (*kubernetes.Clientset, error) {
 
@@ -27,24 +59,6 @@ func getClient(kubeconfig string) (*kubernetes.Clientset, error) {
 	}
 
 	return clientset, nil
-}
-
-func main() {
-
-	clientset, err := getClient("./kube_config.yml")
-	if err != nil {
-		panic(err)
-	}
-
-	getNodes(clientset)
-	getPods(clientset)
-
-	createPod(clientset, "pod-created-by-go")
-
-	createJob(clientset, "job-created-by-go")
-
-	deletePod(clientset, "pod-created-by-go")
-
 }
 
 func createJob(clientset *kubernetes.Clientset, jobName string) bool {
